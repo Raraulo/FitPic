@@ -1,0 +1,25 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+pubspec.lock
+.env
+
+# Android
+android/.gradle/
+android/app/.cxx/
+android/local.properties
+android/**/gradle-wrapper.jar
+*.jks
+*.keystore
+
+# iOS
+ios/Flutter/.last_build_id
+ios/Pods/
+ios/.symlinks/
+
+# IDE
+.idea/
+*.iml
+.vscode/
