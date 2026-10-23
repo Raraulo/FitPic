@@ -29,7 +29,7 @@ class SquareActionButton extends StatelessWidget {
     );
 
     return SizedBox(
-      height: 46,
+      height: 52,
       width: double.infinity,
       child: primary
           ? ElevatedButton(onPressed: onPressed, child: child)

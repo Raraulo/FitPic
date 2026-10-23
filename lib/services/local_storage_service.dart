@@ -4,6 +4,8 @@ import '../models/garment.dart';
 import '../models/outfit.dart';
 
 class LocalStorageService {
+  List<Garment>? _garmentsCache;
+
   static const _appBoxName = 'fitpic_app';
   static const _garmentsBoxName = 'fitpic_garments';
   static const _historyBoxName = 'fitpic_history';
@@ -28,10 +30,11 @@ class LocalStorageService {
   String? get wardrobeImagePath => _appBox.get('wardrobeImagePath') as String?;
   String get faceAnalysis => (_appBox.get('faceAnalysis') as String?) ?? '';
 
-  List<Garment> get garments => _garmentsBox.values
-      .whereType<Map>()
-      .map((item) => Garment.fromJson(Map<String, dynamic>.from(item)))
-      .toList();
+  List<Garment> get garments =>
+      _garmentsCache ??= List.unmodifiable(_garmentsBox.values
+          .whereType<Map>()
+          .map((item) => Garment.fromJson(Map<String, dynamic>.from(item)))
+          .toList());
 
   List<Outfit> get historyOutfits => _historyBox.values
       .whereType<Map>()
@@ -48,6 +51,9 @@ class LocalStorageService {
       .toList();
 
   bool isFavorite(String outfitId) => _favoritesBox.containsKey(outfitId);
+
+  Future<void> saveFavorite(Outfit outfit) =>
+      _favoritesBox.put(outfit.id, outfit.toJson());
 
   Future<void> toggleFavorite(Outfit outfit) async {
     if (isFavorite(outfit.id)) {
@@ -68,21 +74,33 @@ class LocalStorageService {
     await _appBox.put('faceAnalysis', analysis);
   }
 
-  Future<void> saveWardrobeImage(String path) => _appBox.put('wardrobeImagePath', path);
+  Future<void> saveWardrobeImage(String path) =>
+      _appBox.put('wardrobeImagePath', path);
 
   Future<void> addGarments(List<Garment> garments) async {
-    for (final garment in garments) {
-      await _garmentsBox.put(garment.id, garment.toJson());
+    try {
+      await _garmentsBox.putAll({
+        for (final garment in garments) garment.id: garment.toJson(),
+      });
+    } finally {
+      _garmentsCache = null;
     }
   }
 
-  Future<void> deleteGarment(String id) => _garmentsBox.delete(id);
+  Future<void> deleteGarment(String id) async {
+    try {
+      await _garmentsBox.delete(id);
+    } finally {
+      _garmentsCache = null;
+    }
+  }
 
   Future<void> clearHistory() => _historyBox.clear();
 
   Future<void> clearAll() async {
     await _appBox.clear();
     await _garmentsBox.clear();
+    _garmentsCache = null;
     await _historyBox.clear();
     await _favoritesBox.clear();
   }

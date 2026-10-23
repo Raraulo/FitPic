@@ -22,31 +22,23 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
-  late final List<Widget> _screens;
+  final Set<int> _visitedTabs = {0};
 
-  @override
-  void initState() {
-    super.initState();
-
-    _screens = [
-      HomeScreen(
-        services: widget.services,
-        onSuggest: () => _changeTab(2),
-        onProfile: () => _changeTab(3),
-      ),
-      ClosetScreen(
-        services: widget.services,
-        onChanged: _refresh,
-      ),
-      SuggestScreen(
-        services: widget.services,
-        onChanged: _refresh,
-      ),
-      ProfileScreen(
-        services: widget.services,
-        onChanged: _refresh,
-      ),
-    ];
+  Widget _screen(int index) {
+    switch (index) {
+      case 0:
+        return HomeScreen(
+          services: widget.services,
+          onSuggest: () => _changeTab(2),
+          onProfile: () => _changeTab(3),
+        );
+      case 1:
+        return ClosetScreen(services: widget.services, onChanged: _refresh);
+      case 2:
+        return SuggestScreen(services: widget.services, onChanged: _refresh);
+      default:
+        return ProfileScreen(services: widget.services, onChanged: _refresh);
+    }
   }
 
   void _refresh() {
@@ -58,39 +50,37 @@ class _AppShellState extends State<AppShell> {
 
     setState(() {
       _currentIndex = index;
+      _visitedTabs.add(index);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
-
+      backgroundColor: AppTheme.canvas,
       body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          child: IndexedStack(
-            key: ValueKey(_currentIndex),
-            index: _currentIndex,
-            children: _screens,
-          ),
+        child: IndexedStack(
+          index: _currentIndex,
+          children: List.generate(
+              4,
+              (index) => _visitedTabs.contains(index)
+                  ? TickerMode(
+                      enabled: index == _currentIndex, child: _screen(index))
+                  : const SizedBox.shrink()),
         ),
       ),
-
       bottomNavigationBar: SafeArea(
         top: false,
         child: Container(
-          margin: const EdgeInsets.all(14),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: AppTheme.darkBrown.withOpacity(.15),
-            ),
+            border: Border.all(color: AppTheme.line),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(.08),
-                blurRadius: 20,
+                color: AppTheme.cocoa.withValues(alpha: 0.08),
+                blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
             ],
@@ -102,9 +92,9 @@ class _AppShellState extends State<AppShell> {
               onTap: _changeTab,
               type: BottomNavigationBarType.fixed,
               elevation: 0,
-              backgroundColor: Colors.white,
-              selectedItemColor: AppTheme.darkBrown,
-              unselectedItemColor: Colors.grey.shade500,
+              backgroundColor: AppTheme.white,
+              selectedItemColor: AppTheme.accent,
+              unselectedItemColor: AppTheme.muted,
               selectedFontSize: 13,
               unselectedFontSize: 12,
               showUnselectedLabels: true,
@@ -120,9 +110,9 @@ class _AppShellState extends State<AppShell> {
                   label: 'Armario',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.auto_awesome_outlined),
-                  activeIcon: Icon(Icons.auto_awesome),
-                  label: 'IA',
+                  icon: Icon(Icons.whatshot_outlined),
+                  activeIcon: Icon(Icons.whatshot),
+                  label: 'Outfits',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person_outline),

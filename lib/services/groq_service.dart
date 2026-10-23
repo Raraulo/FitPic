@@ -1,30 +1,42 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
+import 'ai_support.dart';
 import '../models/garment.dart';
 import '../models/outfit.dart';
 import '../models/weather_info.dart';
 
 class GroqService {
+  GroqService({http.Client? client}) : _client = client;
+  final http.Client? _client;
+
   static String get _apiKey => dotenv.env['GROQ_API_KEY'] ?? '';
-  static const _model = 'llama-3.3-70b-versatile';
+  static String get _model => dotenv.env['GROQ_MODEL'] ?? 'openai/gpt-oss-20b';
 
   static const outfitPrompt = '''
-Eres un estilista personal de élite. Crea exactamente 4 outfits completos usando TODAS las prendas disponibles del armario.
+Eres un estilista personal de élite. Crea exactamente 4 outfits completos basándote rigurosamente en el ANÁLISIS DE ROSTRO (colorimetría y perfil) y en el CLIMA ACTUAL.
 
-REGLAS OBLIGATORIAS:
-1. Puedes y DEBES mezclar libremente cualquier prenda del armario con cualquier otra, sin importar el orden en que fueron añadidas.
-2. Cada outfit DEBE incluir obligatoriamente prendas para:
-   - "arriba": Camisa, camiseta o polo
-   - "abajo": Pantalón, vaquero, falda o short
-   - "calzado": Zapatillas, zapatos o botas
-   - Si hace frío (< 20°C) o es de noche/madrugada, INCLUYE obligatoriamente una cuarta prenda de "abrigo" (saco, chaqueta, blazer, abrigo).
-3. Varía las combinaciones entre los 4 outfits para maximizar las posibilidades de todo el armario.
-4. Incluye accesorios recomendados para elevar el look (reloj, gafas de sol, anillos, cinturón, corbata, pulsera).
-5. Adapta las combinaciones de colores según los tonos de piel/rostro analizados.
-6. Usa los IDs EXACTOS de las prendas tal como aparecen en la lista de prendas disponibles.
+REGLAS OBLIGATORIAS DE SELECCIÓN POR CATEGORÍA DEL ARMARIO:
+1. "arriba": Selecciona EXACTAMENTE 1 prenda de la categoría Camisas/Camisetas (Camisa, Camiseta, Polo).
+2. "abrigo": Selecciona 1 prenda de la categoría Sacos/Abrigos ÚNICAMENTE SI EL CLIMA O LA TEMPERATURA LO AMERITAN (temperatura < 20°C, clima frío, viento, lluvia o noche). Si el clima es cálido o agradable, NO INCLUYAS NINGÚN ABRIGO O SACO.
+3. "abajo": Selecciona EXACTAMENTE 1 prenda de la categoría Pantalones/Jeans (Pantalón, Jean, Vaquero).
+4. "accesorio": Si existen prendas de la categoría Accesorios/Gorras en el armario, incluye 1 accesorio.
+5. "calzado": Selecciona EXACTAMENTE 1 par de la categoría Zapatos/Calzado (Zapatos, Zapatillas, Calzado).
+
+ORDEN ESTRICTO DE LAS PRENDAS EN LA LISTA:
+Las prendas en el arreglo "prendas" DEBEN estar ordenadas exactamente en el orden vertical del Armario:
+1. "arriba" (Camisa/Camiseta)
+2. "abrigo" (Saco/Chaqueta, solo si el clima lo amerita)
+3. "abajo" (Pantalón/Jean)
+4. "accesorio" (si aplica)
+5. "calzado" (Zapatos/Calzado)
+
+Si hay un Mono o Vestido, puedes elegirlo en lugar de arriba y abajo (tipo "mono"). Nunca inventes prendas de categorias ausentes.
+
+Usa los IDs EXACTOS de las prendas tal como aparecen en la lista de prendas disponibles.
 
 Responde ÚNICAMENTE con JSON válido en este formato exacto:
 {
@@ -36,14 +48,15 @@ Responde ÚNICAMENTE con JSON válido en este formato exacto:
       "pose": "De pie erguido con las manos en los bolsillos",
       "prendas": [
         {"id": "...", "nombre": "...", "como_usarla": "...", "tipo": "arriba"},
+        {"id": "...", "nombre": "...", "como_usarla": "...", "tipo": "abrigo"},
         {"id": "...", "nombre": "...", "como_usarla": "...", "tipo": "abajo"},
-        {"id": "...", "nombre": "...", "como_usarla": "...", "tipo": "calzado"},
-        {"id": "...", "nombre": "...", "como_usarla": "...", "tipo": "abrigo"}
+        {"id": "...", "nombre": "...", "como_usarla": "...", "tipo": "accesorio"},
+        {"id": "...", "nombre": "...", "como_usarla": "...", "tipo": "calzado"}
       ],
-      "accesorios": "Reloj con correa de cuero, gafas de sol de marco negro, cinturón a juego",
-      "descripcion_visual": "Un look pulcro y estilizado ideal para el clima y la hora...",
-      "por_que_funciona": "Combina perfectamente los contrastes fríos/cálidos y resalta tu complexión...",
-      "consejo": "Asegúrate de que la camisa quede bien entallada en los hombros."
+      "accesorios": "Reloj con correa de cuero, gafas de sol de marco negro",
+      "descripcion_visual": "Un look pulcro y estilizado ideal para el clima...",
+      "por_que_funciona": "Combina perfectamente con tu perfil y tono de piel...",
+      "consejo": "Asegúrate de que la camisa quede bien entallada."
     }
   ]
 }
@@ -65,7 +78,8 @@ Responde ÚNICAMENTE con JSON válido en este formato exacto:
 
     final now = time ?? DateTime.now();
     final timeOfDay = _getTimeOfDay(now.hour);
-    final formattedTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} ($timeOfDay)';
+    final formattedTime =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} ($timeOfDay)';
 
     // Build a short summary of already-favorited outfit combinations so the AI avoids repeating them
     String favoritesBlock = '';
@@ -101,33 +115,53 @@ $favoritesBlock
 ${selectedOutfitJson == null ? '' : 'Genera 4 variaciones nuevas inspiradas en este outfit elegido, sin repetir la misma combinacion exacta: $selectedOutfitJson'}
 ''';
 
-    final response = await http.post(
-      Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $_apiKey',
-      },
-      body: jsonEncode({
-        'model': _model,
-        'messages': [
-          {'role': 'system', 'content': 'Responde solo JSON valido, sin markdown.'},
-          {'role': 'user', 'content': userPrompt},
-        ],
-        'temperature': 0.75,
-        'response_format': {'type': 'json_object'},
-      }),
-    );
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('Groq error ${response.statusCode}: ${response.body}');
+    final client = _client ?? http.Client();
+    late http.Response response;
+    try {
+      response = await client
+          .post(
+            Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_apiKey',
+            },
+            body: jsonEncode({
+              'model': _model,
+              'messages': [
+                {
+                  'role': 'system',
+                  'content': 'Responde solo JSON valido, sin markdown.'
+                },
+                {'role': 'user', 'content': userPrompt},
+              ],
+              'temperature': 0.75,
+              'max_completion_tokens': 4096,
+              'response_format': {'type': 'json_object'},
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
+    } on TimeoutException {
+      throw const AiException(
+          'La IA tardo demasiado. Puedes seguir combinando tus prendas manualmente.');
+    } finally {
+      if (_client == null) client.close();
     }
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final content = data['choices']?[0]?['message']?['content']?.toString() ?? '{}';
-    final json = jsonDecode(content) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw aiHttpError('Groq', response.statusCode);
+    }
+
+    final data =
+        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    final content =
+        data['choices']?[0]?['message']?['content']?.toString() ?? '{}';
+    final json = parseAiObject(content);
     return (json['outfits'] as List? ?? [])
         .whereType<Map>()
         .map((item) => Outfit.fromJson(Map<String, dynamic>.from(item)))
+        .where((outfit) =>
+            outfit.items.isNotEmpty &&
+            outfit.items.every((item) => garments.any((g) => g.id == item.id)))
         .toList();
   }
 

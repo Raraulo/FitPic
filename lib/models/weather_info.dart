@@ -20,7 +20,8 @@ class WeatherInfo {
     required this.description,
     required this.tempIn3Hours,
     required this.descIn3Hours,
-    required this.hourly5Hours,
+    required this.hourlyForecast,
+    required this.cityName,
   });
 
   final double temperature;
@@ -29,9 +30,10 @@ class WeatherInfo {
   final String description;
   final double tempIn3Hours;
   final String descIn3Hours;
-  final List<HourlyForecastPoint> hourly5Hours;
+  final List<HourlyForecastPoint> hourlyForecast;
+  final String cityName;
 
-  factory WeatherInfo.fromJson(Map<String, dynamic> json) {
+  factory WeatherInfo.fromJson(Map<String, dynamic> json, {String cityName = 'Ubicación Desconocida'}) {
     final current = Map<String, dynamic>.from(json['current_weather'] as Map);
     final code = (current['weathercode'] as num?)?.toInt() ?? 0;
 
@@ -69,7 +71,7 @@ class WeatherInfo {
             desc3h = _describe(code3h);
           }
 
-          // Parse next 5 hours from current time
+          // Parse next 8 points with 3-hour steps from current time
           final now = DateTime.now();
           int startIndex = -1;
           int minDiffNow = 99999999;
@@ -86,12 +88,18 @@ class WeatherInfo {
           }
 
           if (startIndex != -1) {
-            for (int k = 0; k < 5; k++) {
-              final idx = startIndex + k;
+            for (int k = 0; k < 8; k++) {
+              final idx = startIndex + (k * 3);
               if (idx < times.length) {
                 final tStr = times[idx] as String;
                 final dt = DateTime.tryParse(tStr) ?? now;
-                final hourStr = '${dt.hour.toString().padLeft(2, '0')}:00';
+                
+                // Formatear hora: "12 p. m.", "3 p. m.", etc.
+                final hour = dt.hour;
+                final amPm = hour >= 12 ? 'p. m.' : 'a. m.';
+                final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+                final hourStr = '$displayHour $amPm';
+
                 final temp = (temps[idx] as num).toDouble();
                 final codeVal = (codes[idx] as num).toInt();
                 hourlyPoints.add(HourlyForecastPoint(
@@ -114,7 +122,8 @@ class WeatherInfo {
       description: _describe(code),
       tempIn3Hours: temp3h,
       descIn3Hours: desc3h,
-      hourly5Hours: hourlyPoints,
+      hourlyForecast: hourlyPoints,
+      cityName: cityName,
     );
   }
 

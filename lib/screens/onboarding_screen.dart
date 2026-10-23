@@ -92,10 +92,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   String _friendlyError(Object error) {
     final text = error.toString();
-    if (text.contains('json_validate_failed') || text.contains('Failed to validate JSON')) {
+    if (text.contains('json_validate_failed') ||
+        text.contains('Failed to validate JSON')) {
       return 'La foto quedo guardada, pero la IA no pudo analizarla en JSON. Puedes entrar o intentar otra foto.';
     }
-    if (text.contains('Vision error') || text.contains('error') || text.contains('Exception')) {
+    if (text.contains('Vision error') ||
+        text.contains('error') ||
+        text.contains('Exception')) {
       return 'La foto quedo guardada, pero el analisis de la IA fallo. Puedes entrar o intentar otra foto.';
     }
     return text;
@@ -120,9 +123,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const LinearLoader(visible: false),
               Text('FitPic', style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 4),
-              const Text('Estilista personal local con IA', style: TextStyle(fontSize: 13)),
+              const Text('Estilista personal local con IA',
+                  style: TextStyle(fontSize: 13)),
               const SizedBox(height: 18),
-              LinearLoader(visible: _loading),
+              LinearLoader(visible: _loading, label: 'Preparando tu armario…'),
               if (_error != null) ...[
                 const SizedBox(height: 10),
                 ErrorStrip(message: _error!),
@@ -130,7 +134,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const Spacer(),
               _StepTile(
                 title: 'Armario',
-                subtitle: _wardrobePath == null ? 'Pendiente' : 'Guardado localmente',
+                subtitle:
+                    _wardrobePath == null ? 'Pendiente' : 'Guardado localmente',
                 number: '01',
                 imagePath: _wardrobePath,
               ),
@@ -158,7 +163,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const SizedBox(height: 14),
               _StepTile(
                 title: 'Rostro',
-                subtitle: _facePath == null ? 'Pendiente' : 'Guardado localmente',
+                subtitle:
+                    _facePath == null ? 'Pendiente' : 'Guardado localmente',
                 number: '02',
                 imagePath: _facePath,
               ),
@@ -223,7 +229,9 @@ class _StepTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500)),
                 Text(subtitle, style: const TextStyle(fontSize: 11)),
               ],
             ),
@@ -264,7 +272,8 @@ class _PhotoPreview extends StatelessWidget {
             : Center(
                 child: Text(
                   fallbackText,
-                  style: const TextStyle(fontSize: 11, color: AppTheme.mediumBrown),
+                  style: const TextStyle(
+                      fontSize: 11, color: AppTheme.mediumBrown),
                 ),
               ),
       ),

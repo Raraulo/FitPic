@@ -2,89 +2,138 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const darkBrown = Color(0xFF3E2723);
-  static const mediumBrown = Color(0xFF6D4C41);
+  static const ink = Color(0xFF201A1B);
+  static const cocoa = Color(0xFF513335);
+  static const plum = Color(0xFF7E5360);
+  static const accent = Color(0xFF5A4BDE);
+  static const accentSoft = Color(0xFFEDEBFF);
+  static const mint = Color(0xFFE5F5EF);
+  static const peach = Color(0xFFFFEEE5);
+  static const canvas = Color(0xFFF8F7F5);
   static const white = Color(0xFFFFFFFF);
-  static const line = Color(0xFFE8DED9);
+  static const line = Color(0xFFE8E2DF);
+  static const muted = Color(0xFF7D7374);
+  static const darkBrown = cocoa;
+  static const mediumBrown = plum;
 
   static ThemeData get light {
-    final textTheme = GoogleFonts.interTextTheme().apply(
-      bodyColor: darkBrown,
-      displayColor: darkBrown,
-    );
-
+    final base = GoogleFonts.interTextTheme();
+    final text = base.apply(bodyColor: ink, displayColor: ink);
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: white,
+      scaffoldBackgroundColor: canvas,
       colorScheme: const ColorScheme.light(
-        primary: darkBrown,
-        secondary: mediumBrown,
-        surface: white,
-        onPrimary: white,
-        onSecondary: white,
-        onSurface: darkBrown,
-        error: Color(0xFF8A1F11),
+          primary: accent,
+          onPrimary: white,
+          secondary: plum,
+          onSecondary: white,
+          surface: white,
+          onSurface: ink,
+          error: Color(0xFFB33A45)),
+      textTheme: text.copyWith(
+        headlineLarge: text.headlineLarge
+            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -1.2),
+        headlineMedium: text.headlineMedium
+            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -.8),
+        titleLarge: text.titleLarge
+            ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -.2),
+        titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        bodyMedium: text.bodyMedium?.copyWith(fontSize: 14, height: 1.35),
       ),
-      textTheme: textTheme,
       dividerColor: line,
-      cardTheme: const CardThemeData(
-        color: white,
-        elevation: 0,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.zero,
-          side: BorderSide(color: line),
-        ),
-      ),
       appBarTheme: AppBarTheme(
-        backgroundColor: white,
-        foregroundColor: darkBrown,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0,
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: darkBrown,
-          foregroundColor: white,
+          backgroundColor: canvas,
+          foregroundColor: ink,
           elevation: 0,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-          textStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        ),
-      ),
+          scrolledUnderElevation: 0,
+          titleTextStyle: text.titleLarge
+              ?.copyWith(color: ink, fontWeight: FontWeight.w700)),
+      cardTheme: CardThemeData(
+          color: white,
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: line))),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: accent,
+              foregroundColor: white,
+              elevation: 0,
+              minimumSize: const Size(0, 50),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              textStyle:
+                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: darkBrown,
-          side: const BorderSide(color: darkBrown),
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-          textStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        ),
-      ),
-      inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.zero),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: line),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: darkBrown),
-        ),
-      ),
+          style: OutlinedButton.styleFrom(
+              foregroundColor: ink,
+              minimumSize: const Size(0, 50),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              side: const BorderSide(color: line),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              textStyle:
+                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))),
+      inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: white,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: line)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: line)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: accent, width: 1.5))),
+      snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: ink,
+          contentTextStyle: const TextStyle(
+              color: white, fontSize: 13, fontWeight: FontWeight.w600),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 92)),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: darkBrown,
-        selectedItemColor: white,
-        unselectedItemColor: Color(0xFFCDBDB6),
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: TextStyle(fontSize: 10),
-        unselectedLabelStyle: TextStyle(fontSize: 10),
-      ),
+          backgroundColor: white,
+          selectedItemColor: accent,
+          unselectedItemColor: muted,
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          selectedLabelStyle:
+              TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+          unselectedLabelStyle:
+              TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
     );
+  }
+
+  static void notify(BuildContext context, String message,
+      {bool isError = false, String? actionLabel, VoidCallback? onAction}) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(
+        content: Row(children: [
+          Icon(
+              isError
+                  ? Icons.info_outline_rounded
+                  : Icons.check_circle_outline_rounded,
+              color:
+                  isError ? const Color(0xFFFFB5B5) : const Color(0xFFA7E7CC),
+              size: 20),
+          const SizedBox(width: 10),
+          Expanded(child: Text(message))
+        ]),
+        action: actionLabel == null
+            ? null
+            : SnackBarAction(
+                label: actionLabel,
+                textColor: accentSoft,
+                onPressed: onAction ?? () {})));
   }
 }
